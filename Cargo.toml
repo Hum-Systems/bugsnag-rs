@@ -22,34 +22,16 @@ keywords = ["bug", "reporting"]
 edition = "2018"
 license = "MIT"
 repository = "https://github.com/bobofraggins/bugsnag-rs"
-[dependencies.backtrace]
-version = "*"
 
-[dependencies.hyper]
-version = "*"
-
-[dependencies.futures]
-version = "*"
-
-[dependencies.serde]
-version = "*"
-
-[dependencies.serde_derive]
-version = "*"
-
-[dependencies.serde_json]
-version = "*"
-
-[dependencies.sys-info]
-version = "*"
-[dev-dependencies.lazy_static]
-version = "*"
-
-[dev-dependencies.log]
-version = "*"
-
-[dev-dependencies.serde_test]
-version = "*"
-
-[dev-dependencies.tokio-test]
-version = "*"
+[dependencies]
+backtrace = "*"
+hyper = { version = "*", features = ["full"] }
+futures = "*"
+serde = "*"
+serde_derive = "*"
+serde_json = "*"
+sys-info = "*"
+lazy_static = "*"
+log = "*"
+serde_test = "*"
+tokio-test = "*"
