@@ -1,5 +1,3 @@
-use futures::executor;
-
 use super::{appinfo, deviceinfo, event, exception, notification, stacktrace};
 
 use std::fmt;
@@ -7,7 +5,8 @@ use std::error::Error as StdError;
 
 use serde_json;
 
-use hyper::{Body, Client, Method, Request};
+use hyper::Client;
+use hyper::header::ContentType;
 
 const NOTIFY_URL: &'static str = "http://notify.bugsnag.com";
 
@@ -22,7 +21,7 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", self.description())
     }
 }
 
@@ -199,19 +198,15 @@ impl Bugsnag {
 
     /// Send a json string to the Bugsnag endpoint
     fn send(&self, json: &str) -> Result<(), Error> {
-        let req = Request::builder()
-            .method(Method::POST)
-            .uri(NOTIFY_URL)
-            .header("content-type", "application/json")
-            .body(Body::from(json.to_string()))
-            .unwrap();
-
-        executor::block_on(async {
-            match Client::new().request(req).await {
-                Ok(_) => Ok(()),
-                Err(_) => Err(Error::JsonTransferFailed),
-            }
-        })
+        match Client::new()
+            .post(NOTIFY_URL)
+            .header(ContentType::json())
+            .body(json)
+            .send()
+        {
+            Ok(_) => Ok(()),
+            Err(_) => Err(Error::JsonTransferFailed),
+        }
     }
 
     /// Sets information about the device. These information will be send to

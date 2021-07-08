@@ -24,8 +24,8 @@ license = "MIT"
 repository = "https://github.com/bobofraggins/bugsnag-rs"
 
 [dependencies]
-backtrace = "*"
-hyper = { version = "*", features = ["full"] }
+backtrace = "0.3"
+hyper = "0.10"
 futures = "*"
 serde = "*"
 serde_derive = "*"
