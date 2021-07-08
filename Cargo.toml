@@ -27,7 +27,6 @@ version = "*"
 
 [dependencies.hyper]
 version = "*"
-features = ["full"]
 
 [dependencies.futures]
 version = "*"
@@ -44,13 +43,13 @@ version = "*"
 [dependencies.sys-info]
 version = "*"
 [dev-dependencies.lazy_static]
-version = "1"
+version = "*"
 
 [dev-dependencies.log]
-version = "0.3"
+version = "*"
 
 [dev-dependencies.serde_test]
-version = "1"
+version = "*"
 
 [dev-dependencies.tokio-test]
 version = "*"
