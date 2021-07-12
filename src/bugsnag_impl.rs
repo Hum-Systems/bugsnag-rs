@@ -196,22 +196,20 @@ impl Bugsnag {
     /// Send a json string to the Bugsnag endpoint
     fn send(&self, json: &str) -> Result<(), Error> {
         let client = reqwest::blocking::Client::new();
-        println!("Bugsnag about to POST: {}", json.to_string());
-        match client.post(NOTIFY_URL)
-                    .body(json.to_string())
-                    .header("Content-Type", "application/json")
-                    .header("Bugsnag-Api-Key", self.api_key.clone())
-                    .header("Bugsnag-Payload-Version", "5")
-                    .send()
+        println!("\nBugsnag about to POST: {}\n", json.to_string());
+        let request = client.post(NOTIFY_URL)
+                            .body(json.to_string())
+                            .header("Content-Type", "application/json")
+                            .header("Bugsnag-Api-Key", self.api_key.clone())
+                            .header("Bugsnag-Payload-Version", "5");
+        println!("\nBugsnag request to POST: {:?}\n", request);
+        match request.send()
         {
             Ok(info) => {
-                println!("Bugsnag succedded to POST: {:?}", info);
+                println!("\nBugsnag succedded to POST: {:?}\n", info);
                 Ok(())
             },
-            Err(err) => {
-                println!("Bugsnag failed to POST: {:?}", err);
-                Err(Error::JsonTransferFailed)
-            }
+            Err(_) => Err(Error::JsonTransferFailed)
         }
     }
 
