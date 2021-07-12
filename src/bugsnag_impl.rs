@@ -201,7 +201,10 @@ impl Bugsnag {
                     .header("content-type", "application/json")
                     .send()
         {
-            Ok(_) => Ok(()),
+            Ok(info) => {
+                println!("Bugsnag succedded to POST: {:?}", info);
+                Ok(())
+            },
             Err(err) => {
                 println!("Bugsnag failed to POST: {:?}", err);
                 Err(Error::JsonTransferFailed)
