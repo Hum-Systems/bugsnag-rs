@@ -196,6 +196,7 @@ impl Bugsnag {
     /// Send a json string to the Bugsnag endpoint
     fn send(&self, json: &str) -> Result<(), Error> {
         let client = reqwest::blocking::Client::new();
+        println!("Bugsnag about to POST: {}", json.to_string());
         match client.post(NOTIFY_URL)
                     .body(json.to_string())
                     .header("content-type", "application/json")
