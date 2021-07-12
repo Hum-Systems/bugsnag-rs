@@ -5,7 +5,7 @@ use std::error::Error as StdError;
 
 use serde_json;
 
-const NOTIFY_URL: &'static str = "http://notify.bugsnag.com";
+const NOTIFY_URL: &'static str = "https://notify.bugsnag.com";
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
