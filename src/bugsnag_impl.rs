@@ -199,7 +199,7 @@ impl Bugsnag {
         println!("Bugsnag about to POST: {}", json.to_string());
         match client.post(NOTIFY_URL)
                     .body(json.to_string())
-                    .header("content-type", "application/json")
+                    .header("Content-Type", "application/json")
                     .send()
         {
             Ok(info) => {
