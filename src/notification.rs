@@ -16,6 +16,7 @@ struct Notifier {
 #[serde(rename_all = "camelCase")]
 pub struct Notification<'a> {
     api_key: &'a str,
+    payload_version: u32,
     notifier: Notifier,
     events: &'a [Event<'a>],
 }
