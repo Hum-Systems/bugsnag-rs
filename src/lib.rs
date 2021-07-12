@@ -20,7 +20,6 @@
 //! folder provides some reference implementations.
 
 extern crate backtrace;
-extern crate hyper;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;

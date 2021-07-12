@@ -5,9 +5,6 @@ use std::error::Error as StdError;
 
 use serde_json;
 
-use hyper::Client;
-use hyper::header::ContentType;
-
 const NOTIFY_URL: &'static str = "http://notify.bugsnag.com";
 
 #[derive(Debug, PartialEq)]
@@ -21,7 +18,7 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.description())
+        write!(f, "{}", self.to_string())
     }
 }
 
@@ -198,11 +195,11 @@ impl Bugsnag {
 
     /// Send a json string to the Bugsnag endpoint
     fn send(&self, json: &str) -> Result<(), Error> {
-        match Client::new()
-            .post(NOTIFY_URL)
-            .header(ContentType::json())
-            .body(json)
-            .send()
+        let client = reqwest::blocking::Client::new();
+        match client.post(NOTIFY_URL)
+                    .body(json.to_string())
+                    .header("content-type", "application/json")
+                    .send()
         {
             Ok(_) => Ok(()),
             Err(_) => Err(Error::JsonTransferFailed),
