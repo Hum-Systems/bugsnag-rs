@@ -2,7 +2,7 @@ use super::event::Event;
 
 const NOTIFIER_NAME: &'static str = "Bugsnag Rust";
 const NOTIFIER_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const NOTIFIER_URL: &'static str = "https://github.com/superscale/bugsnag-api-rs";
+const NOTIFIER_URL: &'static str = "https://github.com/bobofraggins/bugsnag-rs";
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -24,6 +24,7 @@ impl<'a> Notification<'a> {
     pub fn new(apikey: &'a str, events: &'a [Event]) -> Notification<'a> {
         Notification {
             api_key: apikey,
+            payload_version: 5,
             notifier: Notifier {
                 name: NOTIFIER_NAME,
                 version: NOTIFIER_VERSION,

@@ -3,7 +3,7 @@ use super::Severity;
 use super::deviceinfo::DeviceInfo;
 use super::appinfo::AppInfo;
 
-pub const PAYLOAD_VERSION: u32 = 4;
+pub const PAYLOAD_VERSION: u32 = 5;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
