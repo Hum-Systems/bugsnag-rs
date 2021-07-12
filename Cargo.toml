@@ -32,5 +32,5 @@ serde_json = "*"
 sys-info = "*"
 lazy_static = "*"
 log = "*"
-reqwest = { git = "ssh://github.com/seanmonstar/reqwest", branch = "0.11.x-pre", features = ["blocking", "json"] }
+reqwest = { version = "*", features = ["blocking", "json"] }
 serde_test = "*"
