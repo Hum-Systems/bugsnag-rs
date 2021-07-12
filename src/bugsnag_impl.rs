@@ -200,6 +200,8 @@ impl Bugsnag {
         match client.post(NOTIFY_URL)
                     .body(json.to_string())
                     .header("Content-Type", "application/json")
+                    .header("Bugsnag-Api-Key", self.api_key.clone())
+                    .header("Bugsnag-Payload-Version", "5")
                     .send()
         {
             Ok(info) => {
