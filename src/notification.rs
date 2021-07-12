@@ -16,7 +16,6 @@ struct Notifier {
 #[serde(rename_all = "camelCase")]
 pub struct Notification<'a> {
     api_key: &'a str,
-    payload_version: &'a str,
     notifier: Notifier,
     events: &'a [Event<'a>],
 }
@@ -25,7 +24,6 @@ impl<'a> Notification<'a> {
     pub fn new(apikey: &'a str, events: &'a [Event]) -> Notification<'a> {
         Notification {
             api_key: apikey,
-            payload_version: "5",
             notifier: Notifier {
                 name: NOTIFIER_NAME,
                 version: NOTIFIER_VERSION,

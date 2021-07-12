@@ -3,9 +3,12 @@ use super::Severity;
 use super::deviceinfo::DeviceInfo;
 use super::appinfo::AppInfo;
 
+pub const PAYLOAD_VERSION: u32 = 4;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Event<'a> {
+    payload_version: u32,
     exceptions: &'a [Exception<'a>],
     #[serde(skip_serializing_if = "Option::is_none")] severity: Option<&'a Severity>,
     #[serde(skip_serializing_if = "Option::is_none")] context: Option<&'a str>,
@@ -24,6 +27,7 @@ impl<'a> Event<'a> {
         app: &'a Option<AppInfo>,
     ) -> Event<'a> {
         Event {
+            payload_version: PAYLOAD_VERSION,
             exceptions,
             severity,
             context,
@@ -36,7 +40,7 @@ impl<'a> Event<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{AppInfo, DeviceInfo, Event, Severity};
+    use super::{AppInfo, DeviceInfo, Event, Severity, PAYLOAD_VERSION};
     use serde_test::{assert_ser_tokens, Token};
 
     #[test]
@@ -60,6 +64,8 @@ mod tests {
                     name: "Event",
                     len: 4,
                 },
+                Token::Str("payloadVersion"),
+                Token::U32(PAYLOAD_VERSION),
                 Token::Str("exceptions"),
                 Token::Seq { len: Some(0) },
                 Token::SeqEnd,
@@ -105,6 +111,8 @@ mod tests {
                     name: "Event",
                     len: 5,
                 },
+                Token::Str("payloadVersion"),
+                Token::U32(PAYLOAD_VERSION),
                 Token::Str("exceptions"),
                 Token::Seq { len: Some(0) },
                 Token::SeqEnd,
@@ -153,6 +161,8 @@ mod tests {
                     name: "Event",
                     len: 5,
                 },
+                Token::Str("payloadVersion"),
+                Token::U32(PAYLOAD_VERSION),
                 Token::Str("exceptions"),
                 Token::Seq { len: Some(0) },
                 Token::SeqEnd,
