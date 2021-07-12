@@ -201,7 +201,7 @@ impl Bugsnag {
                             .body(json.to_string())
                             .header("Content-Type", "application/json")
                             .header("Bugsnag-Api-Key", self.api_key.clone())
-                            .header("Bugsnag-Payload-Version", "5");
+                            .header("Bugsnag-Payload-Version", "4");
         println!("\nBugsnag request to POST: {:?}\n", request);
         match request.send()
         {
