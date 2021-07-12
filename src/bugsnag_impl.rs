@@ -202,7 +202,10 @@ impl Bugsnag {
                     .send()
         {
             Ok(_) => Ok(()),
-            Err(_) => Err(Error::JsonTransferFailed),
+            Err(err) => {
+                println!("Bugsnag failed to POST: {:?}", err);
+                Err(Error::JsonTransferFailed)
+            }
         }
     }
 
