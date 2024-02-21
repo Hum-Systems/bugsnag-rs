@@ -1,7 +1,7 @@
 //! Module for creating a stacktrace in the Bugsnag format.
 
-use std::path::Path;
 use backtrace::{self, Symbol};
+use std::path::Path;
 
 /// Struct for storing the one frame of the stacktrace.
 #[derive(Debug, Serialize)]
@@ -72,7 +72,7 @@ where
 
     backtrace::trace(|frame| {
         backtrace::resolve(frame.ip(), |symbol| {
-            result.push(Frame::from_symbol(&symbol, in_project))
+            result.push(Frame::from_symbol(symbol, in_project))
         });
         true
     });

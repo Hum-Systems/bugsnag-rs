@@ -28,12 +28,12 @@ extern crate serde_json;
 extern crate serde_test;
 extern crate sys_info;
 
+mod bugsnag_impl;
 mod event;
+mod exception;
 mod notification;
 mod stacktrace;
-mod exception;
-mod bugsnag_impl;
 pub use self::bugsnag_impl::*;
-mod deviceinfo;
 mod appinfo;
+mod deviceinfo;
 pub mod panic;

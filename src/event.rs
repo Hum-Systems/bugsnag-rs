@@ -1,7 +1,7 @@
+use super::appinfo::AppInfo;
+use super::deviceinfo::DeviceInfo;
 use super::exception::Exception;
 use super::Severity;
-use super::deviceinfo::DeviceInfo;
-use super::appinfo::AppInfo;
 
 pub const PAYLOAD_VERSION: u32 = 4;
 
@@ -10,11 +10,15 @@ pub const PAYLOAD_VERSION: u32 = 4;
 pub struct Event<'a> {
     payload_version: u32,
     exceptions: &'a [Exception<'a>],
-    #[serde(skip_serializing_if = "Option::is_none")] severity: Option<&'a Severity>,
-    #[serde(skip_serializing_if = "Option::is_none")] context: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    severity: Option<&'a Severity>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    context: Option<&'a str>,
     device: &'a DeviceInfo,
-    #[serde(skip_serializing_if = "Option::is_none")] app: &'a Option<AppInfo>,
-    #[serde(skip_serializing_if = "Option::is_none")] grouping_hash: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    app: &'a Option<AppInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    grouping_hash: Option<&'a str>,
 }
 
 impl<'a> Event<'a> {

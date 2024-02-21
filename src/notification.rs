@@ -1,8 +1,8 @@
 use super::event::Event;
 
-const NOTIFIER_NAME: &'static str = "Bugsnag Rust";
-const NOTIFIER_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const NOTIFIER_URL: &'static str = "https://github.com/bobofraggins/bugsnag-rs";
+const NOTIFIER_NAME: &str = "Bugsnag Rust";
+const NOTIFIER_VERSION: &str = env!("CARGO_PKG_VERSION");
+const NOTIFIER_URL: &str = "https://github.com/bobofraggins/bugsnag-rs";
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,15 +29,15 @@ impl<'a> Notification<'a> {
                 version: NOTIFIER_VERSION,
                 url: NOTIFIER_URL,
             },
-            events: events,
+            events,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Notification, NOTIFIER_NAME, NOTIFIER_URL, NOTIFIER_VERSION};
     use super::super::{deviceinfo, event, exception, stacktrace};
+    use super::{Notification, NOTIFIER_NAME, NOTIFIER_URL, NOTIFIER_VERSION};
     use serde_test::{assert_ser_tokens, Token};
 
     #[test]
@@ -80,20 +80,31 @@ mod tests {
         let exceptions = vec![exception::Exception::new("Assert", "Assert", &frames)];
         let device = deviceinfo::DeviceInfo::new("1.0.0", "testmachine");
         let app = None;
-        let events = vec![
-            event::Event::new(&exceptions, None, None, None, &device, &app),
-        ];
+        let events = vec![event::Event::new(
+            &exceptions,
+            None,
+            None,
+            None,
+            &device,
+            &app,
+        )];
 
         let notification = Notification::new("safe-api-key", &events);
 
         assert_ser_tokens(
             &notification,
             &[
-                Token::Struct { name: "Notification", len: 3 },
+                Token::Struct {
+                    name: "Notification",
+                    len: 3,
+                },
                 Token::Str("apiKey"),
                 Token::Str("safe-api-key"),
                 Token::Str("notifier"),
-                Token::Struct { name: "Notifier", len: 3 },
+                Token::Struct {
+                    name: "Notifier",
+                    len: 3,
+                },
                 Token::Str("name"),
                 Token::Str(NOTIFIER_NAME),
                 Token::Str("version"),
@@ -103,19 +114,28 @@ mod tests {
                 Token::StructEnd,
                 Token::Str("events"),
                 Token::Seq { len: Some(1) },
-                Token::Struct { name: "Event", len: 3 },
+                Token::Struct {
+                    name: "Event",
+                    len: 3,
+                },
                 Token::Str("payloadVersion"),
                 Token::U32(event::PAYLOAD_VERSION),
                 Token::Str("exceptions"),
                 Token::Seq { len: Some(1) },
-                Token::Struct { name: "Exception", len: 3 },
+                Token::Struct {
+                    name: "Exception",
+                    len: 3,
+                },
                 Token::Str("errorClass"),
                 Token::Str("Assert"),
                 Token::Str("message"),
                 Token::Str("Assert"),
                 Token::Str("stacktrace"),
                 Token::Seq { len: Some(1) },
-                Token::Struct { name: "Frame", len: 4 },
+                Token::Struct {
+                    name: "Frame",
+                    len: 4,
+                },
                 Token::Str("file"),
                 Token::Str("test.rs"),
                 Token::Str("lineNumber"),
@@ -129,7 +149,10 @@ mod tests {
                 Token::StructEnd,
                 Token::SeqEnd,
                 Token::Str("device"),
-                Token::Struct { name: "DeviceInfo", len: 2 },
+                Token::Struct {
+                    name: "DeviceInfo",
+                    len: 2,
+                },
                 Token::Str("osVersion"),
                 Token::Str("1.0.0"),
                 Token::Str("hostname"),

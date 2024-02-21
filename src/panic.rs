@@ -15,14 +15,16 @@ pub fn handle(
         format!("Error: {:?}", info.payload())
     };
 
-    let notify = api.notify("Panic", message.as_str())
+    let notify = api
+        .notify("Panic", message.as_str())
         .severity(Severity::Error);
 
     let result = if let Some(methods_to_ignore) = methods_to_ignore {
         notify.methods_to_ignore(methods_to_ignore)
     } else {
         notify
-    }.send();
+    }
+    .send();
 
     result
 }

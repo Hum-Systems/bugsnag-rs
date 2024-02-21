@@ -3,9 +3,7 @@ use super::{appinfo, deviceinfo, event, exception, notification, stacktrace};
 use std::error::Error as StdError;
 use std::fmt;
 
-use serde_json;
-
-const NOTIFY_URL: &'static str = "https://notify.bugsnag.com";
+const NOTIFY_URL: &str = "https://notify.bugsnag.com";
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
@@ -18,7 +16,7 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{:#?}", self)
     }
 }
 
@@ -171,17 +169,14 @@ impl Bugsnag {
         error_class: &'a str,
         message: &'a str,
     ) -> NotifyBuilder<'a, 'bugsnag> {
-        NotifyBuilder::new(&self, error_class, message)
+        NotifyBuilder::new(self, error_class, message)
     }
 
     fn create_stacktrace(&self, methods_to_ignore: Option<&[&str]>) -> Vec<stacktrace::Frame> {
         if let Some(ignore) = methods_to_ignore {
             let in_project_check = |file: &str, method: &str| {
                 file.starts_with(self.project_source_dir.as_str())
-                    && ignore
-                        .iter()
-                        .find(|check| !method.contains(*check))
-                        .is_some()
+                    && ignore.iter().any(|check| !method.contains(*check))
             };
 
             stacktrace::create_stacktrace(&in_project_check)
@@ -203,7 +198,7 @@ impl Bugsnag {
             .header("Bugsnag-Api-Key", self.api_key.clone())
             .header("Bugsnag-Payload-Version", "4");
         match request.send() {
-            Ok(info) => Ok(()),
+            Ok(_) => Ok(()),
             Err(_) => Err(Error::JsonTransferFailed),
         }
     }

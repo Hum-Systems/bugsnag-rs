@@ -1,8 +1,10 @@
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppInfo {
-    #[serde(skip_serializing_if = "Option::is_none")] version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] release_stage: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    release_stage: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "type")]
     atype: Option<String>,

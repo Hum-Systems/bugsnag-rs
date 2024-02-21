@@ -1,5 +1,3 @@
-use sys_info;
-
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceInfo {
@@ -17,7 +15,7 @@ impl DeviceInfo {
 
     pub fn generate() -> DeviceInfo {
         let mut version = sys_info::os_type().unwrap_or("Unknown".to_owned());
-        version.push_str(":");
+        version.push(':');
         version.push_str(&sys_info::os_release().unwrap_or("u.k.n.o.w.n".to_owned()));
 
         let hostname = sys_info::hostname().unwrap_or("UnknownHost".to_owned());

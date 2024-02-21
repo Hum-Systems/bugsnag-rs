@@ -12,8 +12,8 @@ impl<'a> Exception<'a> {
     pub fn new(errorclass: &'a str, message: &'a str, stacktrace: &'a [Frame]) -> Exception<'a> {
         Exception {
             error_class: errorclass,
-            message: message,
-            stacktrace: stacktrace,
+            message,
+            stacktrace,
         }
     }
 }
