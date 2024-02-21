@@ -1,7 +1,7 @@
 use super::{appinfo, deviceinfo, event, exception, notification, stacktrace};
 
-use std::fmt;
 use std::error::Error as StdError;
+use std::fmt;
 
 use serde_json;
 
@@ -125,19 +125,19 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
     /// Prepares the json as string
     fn prepare_json(&self) -> Result<String, Error> {
         let stacktrace = self.bugsnag.create_stacktrace(self.methods_to_ignore);
-        let exceptions = vec![
-            exception::Exception::new(self.error_class, self.message, &stacktrace),
-        ];
-        let events = vec![
-            event::Event::new(
-                &exceptions,
-                self.severity.as_ref(),
-                self.context,
-                self.grouping_hash,
-                &self.bugsnag.device_info,
-                &self.bugsnag.app_info,
-            ),
-        ];
+        let exceptions = vec![exception::Exception::new(
+            self.error_class,
+            self.message,
+            &stacktrace,
+        )];
+        let events = vec![event::Event::new(
+            &exceptions,
+            self.severity.as_ref(),
+            self.context,
+            self.grouping_hash,
+            &self.bugsnag.device_info,
+            &self.bugsnag.app_info,
+        )];
         let notification = notification::Notification::new(&self.bugsnag.api_key, &events);
 
         match serde_json::to_string(&notification) {
@@ -196,20 +196,15 @@ impl Bugsnag {
     /// Send a json string to the Bugsnag endpoint
     fn send(&self, json: &str) -> Result<(), Error> {
         let client = reqwest::blocking::Client::new();
-        println!("\nBugsnag about to POST: {}\n", json.to_string());
-        let request = client.post(NOTIFY_URL)
-                            .body(json.to_string())
-                            .header("Content-Type", "application/json")
-                            .header("Bugsnag-Api-Key", self.api_key.clone())
-                            .header("Bugsnag-Payload-Version", "4");
-        println!("\nBugsnag request to POST: {:?}\n", request);
-        match request.send()
-        {
-            Ok(info) => {
-                println!("\nBugsnag succedded to POST: {:?}\n", info);
-                Ok(())
-            },
-            Err(_) => Err(Error::JsonTransferFailed)
+        let request = client
+            .post(NOTIFY_URL)
+            .body(json.to_string())
+            .header("Content-Type", "application/json")
+            .header("Bugsnag-Api-Key", self.api_key.clone())
+            .header("Bugsnag-Payload-Version", "4");
+        match request.send() {
+            Ok(info) => Ok(()),
+            Err(_) => Err(Error::JsonTransferFailed),
         }
     }
 
@@ -256,12 +251,10 @@ mod tests {
 
         assert_ser_tokens(
             &severity,
-            &[
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "error",
-                },
-            ],
+            &[Token::UnitVariant {
+                name: "Severity",
+                variant: "error",
+            }],
         );
     }
 
@@ -271,12 +264,10 @@ mod tests {
 
         assert_ser_tokens(
             &severity,
-            &[
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "info",
-                },
-            ],
+            &[Token::UnitVariant {
+                name: "Severity",
+                variant: "info",
+            }],
         );
     }
 
@@ -286,12 +277,10 @@ mod tests {
 
         assert_ser_tokens(
             &severity,
-            &[
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "warning",
-                },
-            ],
+            &[Token::UnitVariant {
+                name: "Severity",
+                variant: "warning",
+            }],
         );
     }
 
