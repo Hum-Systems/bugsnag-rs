@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 use super::{appinfo, deviceinfo, event, exception, notification, stacktrace, user};
 
 use std::error::Error as StdError;
@@ -56,6 +58,7 @@ pub struct NotifyBuilder<'a, 'bugsnag> {
     send_executed: bool,
     methods_to_ignore: Option<&'a [&'a str]>,
     context: Option<&'a str>,
+    metadata: Option<serde_json::Value>,
     severity: Option<Severity>,
     grouping_hash: Option<&'a str>,
 }
@@ -73,6 +76,7 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
             send_executed: false,
             methods_to_ignore: None,
             context: None,
+            metadata: None,
             severity: None,
             grouping_hash: None,
         }
@@ -93,6 +97,16 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
     pub fn context(mut self, val: &'a str) -> Self {
         self.context = Some(val);
         self
+    }
+
+    ///
+    pub fn metadata(mut self, val: &impl Serialize) -> Result<Self, Error> {
+        let json_val = match serde_json::to_value(val) {
+            Ok(v) => v,
+            Err(_) => return Err(Error::JsonConversionFailed),
+        };
+        self.metadata = Some(json_val);
+        Ok(self)
     }
 
     /// Sets the severity of the error.
@@ -137,6 +151,7 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
             &self.bugsnag.device_info,
             &self.bugsnag.app_info,
             &self.bugsnag.user,
+            &self.metadata,
         )];
         let notification = notification::Notification::new(&self.bugsnag.api_key, &events);
 

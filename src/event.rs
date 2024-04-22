@@ -21,6 +21,8 @@ pub struct Event<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     user: &'a Option<User>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    meta_data: &'a Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     grouping_hash: Option<&'a str>,
 }
 
@@ -33,6 +35,7 @@ impl<'a> Event<'a> {
         device: &'a DeviceInfo,
         app: &'a Option<AppInfo>,
         user: &'a Option<User>,
+        meta_data: &'a Option<serde_json::Value>,
     ) -> Event<'a> {
         Event {
             payload_version: PAYLOAD_VERSION,
@@ -42,6 +45,7 @@ impl<'a> Event<'a> {
             device,
             app,
             user,
+            meta_data,
             grouping_hash,
         }
     }
@@ -60,6 +64,7 @@ mod tests {
         let device = DeviceInfo::new("1.0.0", "testmachine");
         let app = None;
         let user = None;
+        let metadata = None;
         let evt = Event::new(
             &empty_vec,
             Some(&Severity::Error),
@@ -68,6 +73,7 @@ mod tests {
             &device,
             &app,
             &user,
+            &metadata,
         );
 
         assert_ser_tokens(
@@ -109,6 +115,7 @@ mod tests {
         let device = DeviceInfo::new("1.0.0", "testmachine");
         let app = None;
         let user = None;
+        let metadata = None;
         let evt = Event::new(
             &empty_vec,
             Some(&Severity::Error),
@@ -117,6 +124,7 @@ mod tests {
             &device,
             &app,
             &user,
+            &metadata,
         );
 
         assert_ser_tokens(
@@ -161,6 +169,7 @@ mod tests {
         let device = DeviceInfo::new("1.0.0", "testmachine");
         let app = Some(AppInfo::new(Some("1.0.0"), Some("test"), Some("rust")));
         let user = None;
+        let metadata = None;
         let evt = Event::new(
             &empty_vec,
             Some(&Severity::Error),
@@ -169,6 +178,7 @@ mod tests {
             &device,
             &app,
             &user,
+            &metadata,
         );
 
         assert_ser_tokens(
@@ -226,6 +236,7 @@ mod tests {
         let device = DeviceInfo::new("1.0.0", "testmachine");
         let app = None;
         let user = Some(User::new("123456789", "testuser", "test@user.com"));
+        let metadata = None;
         let evt = Event::new(
             &empty_vec,
             Some(&Severity::Error),
@@ -234,6 +245,7 @@ mod tests {
             &device,
             &app,
             &user,
+            &metadata,
         );
 
         assert_ser_tokens(
@@ -280,6 +292,98 @@ mod tests {
                 Token::Some,
                 Token::Str("test@user.com"),
                 Token::StructEnd,
+                Token::StructEnd,
+            ],
+        );
+    }
+
+    #[test]
+    fn test_event_with_metadata_to_json() {
+        let empty_vec = Vec::new();
+        let device = DeviceInfo::new("1.0.0", "testmachine");
+        let app = None;
+        let user = None;
+
+        #[derive(Debug, Serialize)]
+        struct TestMetaData {
+            data: NestedTestMetaData,
+            meta: String,
+            test: String,
+        }
+        #[derive(Debug, Serialize)]
+        struct NestedTestMetaData {
+            boolean: bool,
+            float: f64,
+            number: u64,
+        }
+        let test_metadata = TestMetaData {
+            data: NestedTestMetaData {
+                boolean: false,
+                float: 1.0,
+                number: 42,
+            },
+            meta: "test meta data".to_string(),
+            test: "DATA_META_TEST".to_string(),
+        };
+
+        let metadata = Some(serde_json::to_value(test_metadata).unwrap());
+
+        let evt = Event::new(
+            &empty_vec,
+            Some(&Severity::Error),
+            None,
+            None,
+            &device,
+            &app,
+            &user,
+            &metadata,
+        );
+
+        assert_ser_tokens(
+            &evt,
+            &[
+                Token::Struct {
+                    name: "Event",
+                    len: 5,
+                },
+                Token::Str("payloadVersion"),
+                Token::U32(PAYLOAD_VERSION),
+                Token::Str("exceptions"),
+                Token::Seq { len: Some(0) },
+                Token::SeqEnd,
+                Token::Str("severity"),
+                Token::Some,
+                Token::UnitVariant {
+                    name: "Severity",
+                    variant: "error",
+                },
+                Token::Str("device"),
+                Token::Struct {
+                    name: "DeviceInfo",
+                    len: 2,
+                },
+                Token::Str("osVersion"),
+                Token::Str("1.0.0"),
+                Token::Str("hostname"),
+                Token::Str("testmachine"),
+                Token::StructEnd,
+                Token::Str("metaData"),
+                Token::Some,
+                Token::Map { len: Some(3) },
+                Token::Str("data"),
+                Token::Map { len: Some(3) },
+                Token::Str("boolean"),
+                Token::Bool(false),
+                Token::Str("float"),
+                Token::F64(1.0),
+                Token::Str("number"),
+                Token::U64(42),
+                Token::MapEnd,
+                Token::Str("meta"),
+                Token::Str("test meta data"),
+                Token::Str("test"),
+                Token::Str("DATA_META_TEST"),
+                Token::MapEnd,
                 Token::StructEnd,
             ],
         );

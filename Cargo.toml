@@ -12,7 +12,7 @@
 
 [package]
 name = "bugsnag"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Bastian Köcher <git@kchr.de>"]
 description = "The api of Bugsnag in rust."
 homepage = "https://github.com/superscale/bugsnag-rs"
