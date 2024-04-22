@@ -1,4 +1,4 @@
-use super::{appinfo, deviceinfo, event, exception, notification, stacktrace};
+use super::{appinfo, deviceinfo, event, exception, notification, stacktrace, user};
 
 use std::error::Error as StdError;
 use std::fmt;
@@ -43,6 +43,7 @@ pub struct Bugsnag {
     api_key: String,
     device_info: deviceinfo::DeviceInfo,
     app_info: Option<appinfo::AppInfo>,
+    user: Option<user::User>,
     project_source_dir: String,
 }
 
@@ -135,6 +136,7 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
             self.grouping_hash,
             &self.bugsnag.device_info,
             &self.bugsnag.app_info,
+            &self.bugsnag.user,
         )];
         let notification = notification::Notification::new(&self.bugsnag.api_key, &events);
 
@@ -157,6 +159,7 @@ impl Bugsnag {
         Bugsnag {
             api_key: api_key.to_owned(),
             device_info: deviceinfo::DeviceInfo::generate(),
+            user: None,
             app_info: None,
             project_source_dir: project_source_dir.to_owned(),
         }
@@ -224,6 +227,10 @@ impl Bugsnag {
         atype: Option<&str>,
     ) {
         self.app_info = Some(appinfo::AppInfo::new(version, release_stage, atype));
+    }
+
+    pub fn set_user(&mut self, user: user::User) {
+        self.user = Some(user);
     }
 
     pub fn reset_app_info(&mut self) {

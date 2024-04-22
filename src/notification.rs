@@ -80,6 +80,7 @@ mod tests {
         let exceptions = vec![exception::Exception::new("Assert", "Assert", &frames)];
         let device = deviceinfo::DeviceInfo::new("1.0.0", "testmachine");
         let app = None;
+        let user = None;
         let events = vec![event::Event::new(
             &exceptions,
             None,
@@ -87,6 +88,7 @@ mod tests {
             None,
             &device,
             &app,
+            &user,
         )];
 
         let notification = Notification::new("safe-api-key", &events);
