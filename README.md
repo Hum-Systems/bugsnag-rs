@@ -33,7 +33,7 @@ For more examples on how to integrate bugsnag into a project, the examples folde
 
 
 # Which json fields are missing?
+- context (present but not exposed / usable)
 - metaData
-- user
 
 The structure of the json can be found [here](https://docs.bugsnag.com/api/error-reporting/).
