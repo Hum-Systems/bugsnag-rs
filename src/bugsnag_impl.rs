@@ -54,6 +54,7 @@ pub enum Severity {
     Info,
 }
 
+#[derive(Debug, Clone)]
 pub struct Bugsnag {
     api_key: String,
     device_info: deviceinfo::DeviceInfo,
