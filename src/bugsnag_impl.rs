@@ -1,11 +1,14 @@
 use serde::Serialize;
+use serde_json::json;
 
 use super::{appinfo, deviceinfo, event, exception, notification, stacktrace, user};
 
 use std::error::Error as StdError;
 use std::fmt;
+use std::fs::DirEntry;
 
 const NOTIFY_URL: &str = "https://notify.bugsnag.com";
+const OFFLINE_REPORT_PREFIX: &str = "bugsnag_report";
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
@@ -14,6 +17,10 @@ pub enum Error {
     /// While transferring the json to Bugsnag, a problem occurred.
     /// This error does not reflect if Bugsnag rejected the json.
     JsonTransferFailed,
+    /// Transfer failed and subsequent attempt to store json to offline_storage failed as well.
+    JsonTransferAndStorageFailed,
+    /// No storage has been specified or could not be read
+    OfflineStorageError,
 }
 
 impl fmt::Display for Error {
@@ -28,6 +35,12 @@ impl StdError for Error {
             Error::JsonConversionFailed => "conversion to json failed",
             Error::JsonTransferFailed => {
                 "while transferring the json to Bugsnag, a problem occurred"
+            },
+            Error::JsonTransferAndStorageFailed => {
+                "transferring json to Bugsnag failed and subsequent attempt to store json for retransmission failed as well"
+            },
+            Error::OfflineStorageError => {
+                "reading from / writing to offline storage failed"
             }
         }
     }
@@ -47,6 +60,7 @@ pub struct Bugsnag {
     app_info: Option<appinfo::AppInfo>,
     user: Option<user::User>,
     project_source_dir: String,
+    offline_storage: Option<String>,
 }
 
 /// Builder for creating the notification that will be send to Bugsnag.
@@ -131,18 +145,30 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
 
         self.send_executed = true;
 
-        let json = self.prepare_json()?;
-        self.bugsnag.send(&json)
+        let json = self.create_json()?;
+        self.bugsnag.send(&json, true)
     }
 
     /// Prepares the json as string
-    fn prepare_json(&self) -> Result<String, Error> {
+    fn create_json(&self) -> Result<String, Error> {
         let stacktrace = self.bugsnag.create_stacktrace(self.methods_to_ignore);
         let exceptions = vec![exception::Exception::new(
             self.error_class,
             self.message,
             &stacktrace,
         )];
+        let metadata = {
+            let ts = chrono::Utc::now().to_rfc3339();
+            let json = if let Some(md) = &self.metadata {
+                json!({
+                    "bugsnag-rs": {"occurred": ts},
+                    "metaData": md
+                })
+            } else {
+                json!({"bugsnag-rs": {"occurred": ts}})
+            };
+            Some(json)
+        };
         let events = vec![event::Event::new(
             &exceptions,
             self.severity.as_ref(),
@@ -151,9 +177,9 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
             &self.bugsnag.device_info,
             &self.bugsnag.app_info,
             &self.bugsnag.user,
-            &self.metadata,
+            &metadata,
         )];
-        let notification = notification::Notification::new(&self.bugsnag.api_key, &events);
+        let notification = notification::Notification::new(&events);
 
         match serde_json::to_string(&notification) {
             Ok(json) => Ok(json),
@@ -177,6 +203,7 @@ impl Bugsnag {
             user: None,
             app_info: None,
             project_source_dir: project_source_dir.to_owned(),
+            offline_storage: None,
         }
     }
 
@@ -207,17 +234,29 @@ impl Bugsnag {
     }
 
     /// Send a json string to the Bugsnag endpoint
-    fn send(&self, json: &str) -> Result<(), Error> {
+    fn send(&self, json: &str, store_on_error: bool) -> Result<(), Error> {
         let client = reqwest::blocking::Client::new();
         let request = client
             .post(NOTIFY_URL)
             .body(json.to_string())
             .header("Content-Type", "application/json")
             .header("Bugsnag-Api-Key", self.api_key.clone())
-            .header("Bugsnag-Payload-Version", "4");
+            .header("Bugsnag-Payload-Version", notification::PAYLOAD_VERSION);
         match request.send() {
             Ok(_) => Ok(()),
-            Err(_) => Err(Error::JsonTransferFailed),
+            Err(_) => {
+                if store_on_error {
+                    let os = match &self.offline_storage {
+                        Some(os) => os,
+                        None => return Err(Error::JsonTransferAndStorageFailed),
+                    };
+                    let name = format!("{os}/{OFFLINE_REPORT_PREFIX}_{}", uuid::Uuid::new_v4());
+                    if std::fs::write(name, json).is_err() {
+                        return Err(Error::JsonTransferAndStorageFailed);
+                    }
+                }
+                Err(Error::JsonTransferFailed)
+            }
         }
     }
 
@@ -244,12 +283,47 @@ impl Bugsnag {
         self.app_info = Some(appinfo::AppInfo::new(version, release_stage, atype));
     }
 
+    pub fn reset_app_info(&mut self) {
+        self.app_info = None;
+    }
+
     pub fn set_user(&mut self, user: user::User) {
         self.user = Some(user);
     }
 
-    pub fn reset_app_info(&mut self) {
-        self.app_info = None;
+    pub fn use_offline_storage(&mut self, storage: &str) {
+        self.offline_storage = Some(storage.to_string())
+    }
+
+    pub fn retry_from_storage(&self) -> Result<(), Error> {
+        let os = match &self.offline_storage {
+            Some(storage) => storage,
+            None => return Err(Error::OfflineStorageError),
+        };
+
+        let entries = match std::fs::read_dir(os) {
+            Ok(entries) => entries
+                .flatten()
+                .filter(|e| match e.file_name().to_str() {
+                    Some(s) => s.starts_with(OFFLINE_REPORT_PREFIX),
+                    None => false,
+                })
+                .collect::<Vec<DirEntry>>(),
+            Err(_) => return Err(Error::OfflineStorageError),
+        };
+
+        for entry in entries {
+            let report = match std::fs::read_to_string(entry.path()) {
+                Ok(r) => r,
+                Err(_) => return Err(Error::OfflineStorageError),
+            };
+
+            if let Err(e) = self.send(&report, false) {
+                return Err(e);
+            }
+            std::fs::remove_file(entry.path()).ok();
+        }
+        Ok(())
     }
 
     pub fn get_project_source_dir(&self) -> &String {
@@ -259,47 +333,7 @@ impl Bugsnag {
 
 #[cfg(test)]
 mod tests {
-    use super::{Bugsnag, Severity};
-    use serde_test::{assert_ser_tokens, Token};
-
-    #[test]
-    fn test_error_to_json() {
-        let severity = Severity::Error;
-
-        assert_ser_tokens(
-            &severity,
-            &[Token::UnitVariant {
-                name: "Severity",
-                variant: "error",
-            }],
-        );
-    }
-
-    #[test]
-    fn test_info_to_json() {
-        let severity = Severity::Info;
-
-        assert_ser_tokens(
-            &severity,
-            &[Token::UnitVariant {
-                name: "Severity",
-                variant: "info",
-            }],
-        );
-    }
-
-    #[test]
-    fn test_warning_to_json() {
-        let severity = Severity::Warning;
-
-        assert_ser_tokens(
-            &severity,
-            &[Token::UnitVariant {
-                name: "Severity",
-                variant: "warning",
-            }],
-        );
-    }
+    use super::Bugsnag;
 
     #[test]
     fn test_get_project_dir() {

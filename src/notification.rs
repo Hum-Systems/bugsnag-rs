@@ -1,8 +1,10 @@
 use super::event::Event;
+use serde::Serialize;
 
 const NOTIFIER_NAME: &str = "Bugsnag Rust";
 const NOTIFIER_VERSION: &str = env!("CARGO_PKG_VERSION");
-const NOTIFIER_URL: &str = "https://github.com/bobofraggins/bugsnag-rs";
+const NOTIFIER_URL: &str = "https://github.com/Hum-Systems/bugsnag-rs";
+pub const PAYLOAD_VERSION: &str = "5";
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -15,15 +17,15 @@ struct Notifier {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Notification<'a> {
-    api_key: &'a str,
+    payload_version: &'static str,
     notifier: Notifier,
     events: &'a [Event<'a>],
 }
 
 impl<'a> Notification<'a> {
-    pub fn new(apikey: &'a str, events: &'a [Event]) -> Notification<'a> {
+    pub fn new(events: &'a [Event]) -> Notification<'a> {
         Notification {
-            api_key: apikey,
+            payload_version: PAYLOAD_VERSION,
             notifier: Notifier {
                 name: NOTIFIER_NAME,
                 version: NOTIFIER_VERSION,
@@ -36,41 +38,27 @@ impl<'a> Notification<'a> {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::super::{deviceinfo, event, exception, stacktrace};
-    use super::{Notification, NOTIFIER_NAME, NOTIFIER_URL, NOTIFIER_VERSION};
-    use serde_test::{assert_ser_tokens, Token};
+    use super::{Notification, NOTIFIER_NAME, NOTIFIER_URL, NOTIFIER_VERSION, PAYLOAD_VERSION};
 
     #[test]
     fn test_notification_to_json() {
         let empty_vec = Vec::new();
-        let notification = Notification::new("safe-api-key", &empty_vec);
+        let notification = Notification::new(&empty_vec);
 
-        assert_ser_tokens(
-            &notification,
-            &[
-                Token::Struct {
-                    name: "Notification",
-                    len: 3,
+        assert_eq!(
+            serde_json::to_value(&notification).unwrap(),
+            json!({
+                "payloadVersion": PAYLOAD_VERSION,
+                "notifier": {
+                    "name": NOTIFIER_NAME,
+                    "version": NOTIFIER_VERSION,
+                    "url": NOTIFIER_URL,
                 },
-                Token::Str("apiKey"),
-                Token::Str("safe-api-key"),
-                Token::Str("notifier"),
-                Token::Struct {
-                    name: "Notifier",
-                    len: 3,
-                },
-                Token::Str("name"),
-                Token::Str(NOTIFIER_NAME),
-                Token::Str("version"),
-                Token::Str(NOTIFIER_VERSION),
-                Token::Str("url"),
-                Token::Str(NOTIFIER_URL),
-                Token::StructEnd,
-                Token::Str("events"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
-                Token::StructEnd,
-            ],
+                "events": []
+            })
         );
     }
 
@@ -93,79 +81,40 @@ mod tests {
             &metadata,
         )];
 
-        let notification = Notification::new("safe-api-key", &events);
+        let notification = Notification::new(&events);
 
-        assert_ser_tokens(
-            &notification,
-            &[
-                Token::Struct {
-                    name: "Notification",
-                    len: 3,
+        assert_eq!(
+            serde_json::to_value(&notification).unwrap(),
+            json!({
+                "payloadVersion": PAYLOAD_VERSION,
+                "notifier": {
+                    "name": NOTIFIER_NAME,
+                    "version": NOTIFIER_VERSION,
+                    "url": NOTIFIER_URL,
                 },
-                Token::Str("apiKey"),
-                Token::Str("safe-api-key"),
-                Token::Str("notifier"),
-                Token::Struct {
-                    name: "Notifier",
-                    len: 3,
-                },
-                Token::Str("name"),
-                Token::Str(NOTIFIER_NAME),
-                Token::Str("version"),
-                Token::Str(NOTIFIER_VERSION),
-                Token::Str("url"),
-                Token::Str(NOTIFIER_URL),
-                Token::StructEnd,
-                Token::Str("events"),
-                Token::Seq { len: Some(1) },
-                Token::Struct {
-                    name: "Event",
-                    len: 3,
-                },
-                Token::Str("payloadVersion"),
-                Token::U32(event::PAYLOAD_VERSION),
-                Token::Str("exceptions"),
-                Token::Seq { len: Some(1) },
-                Token::Struct {
-                    name: "Exception",
-                    len: 3,
-                },
-                Token::Str("errorClass"),
-                Token::Str("Assert"),
-                Token::Str("message"),
-                Token::Str("Assert"),
-                Token::Str("stacktrace"),
-                Token::Seq { len: Some(1) },
-                Token::Struct {
-                    name: "Frame",
-                    len: 4,
-                },
-                Token::Str("file"),
-                Token::Str("test.rs"),
-                Token::Str("lineNumber"),
-                Token::U32(400),
-                Token::Str("method"),
-                Token::Str("test"),
-                Token::Str("inProject"),
-                Token::Bool(false),
-                Token::StructEnd,
-                Token::SeqEnd,
-                Token::StructEnd,
-                Token::SeqEnd,
-                Token::Str("device"),
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("1.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine"),
-                Token::StructEnd,
-                Token::StructEnd,
-                Token::SeqEnd,
-                Token::StructEnd,
-            ],
+                "events": [
+                    {
+                        "exceptions": [
+                            {
+                                "errorClass": "Assert",
+                                "message": "Assert",
+                                "stacktrace": [
+                                    {
+                                        "file": "test.rs",
+                                        "lineNumber": 400,
+                                        "method": "test",
+                                        "inProject": false
+                                    }
+                                ]
+                            }
+                        ],
+                        "device": {
+                            "osVersion": "1.0.0",
+                            "hostname": "testmachine"
+                        }
+                    }
+                ]
+            })
         );
     }
 }

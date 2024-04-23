@@ -1,6 +1,7 @@
 //! Module for creating a stacktrace in the Bugsnag format.
 
 use backtrace::{self, Symbol};
+use serde::Serialize;
 use std::path::Path;
 
 /// Struct for storing the one frame of the stacktrace.
@@ -83,7 +84,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{create_stacktrace, Frame};
-    use serde_test::{assert_ser_tokens, Token};
+    use serde_json::json;
 
     #[test]
     #[ignore]
@@ -110,23 +111,14 @@ mod tests {
     fn test_frame_to_json() {
         let frame = Frame::new("test.rs", 500, "test_json", false);
 
-        assert_ser_tokens(
-            &frame,
-            &[
-                Token::Struct {
-                    name: "Frame",
-                    len: 4,
-                },
-                Token::Str("file"),
-                Token::Str("test.rs"),
-                Token::Str("lineNumber"),
-                Token::U32(500),
-                Token::Str("method"),
-                Token::Str("test_json"),
-                Token::Str("inProject"),
-                Token::Bool(false),
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&frame).unwrap(),
+            json!({
+                "file": "test.rs",
+                "lineNumber": 500,
+                "method": "test_json",
+                "inProject": false
+            })
         );
     }
 

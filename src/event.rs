@@ -3,13 +3,11 @@ use super::deviceinfo::DeviceInfo;
 use super::exception::Exception;
 use super::user::User;
 use super::Severity;
-
-pub const PAYLOAD_VERSION: u32 = 4;
+use serde::Serialize;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Event<'a> {
-    payload_version: u32,
     exceptions: &'a [Exception<'a>],
     #[serde(skip_serializing_if = "Option::is_none")]
     severity: Option<&'a Severity>,
@@ -38,7 +36,6 @@ impl<'a> Event<'a> {
         meta_data: &'a Option<serde_json::Value>,
     ) -> Event<'a> {
         Event {
-            payload_version: PAYLOAD_VERSION,
             exceptions,
             severity,
             context,
@@ -53,10 +50,10 @@ impl<'a> Event<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::user::User;
+    use serde_json::json;
 
-    use super::{AppInfo, DeviceInfo, Event, Severity, PAYLOAD_VERSION};
-    use serde_test::{assert_ser_tokens, Token};
+    use super::{AppInfo, DeviceInfo, Event, Severity};
+    use crate::user::User;
 
     #[test]
     fn test_event_to_json() {
@@ -76,36 +73,16 @@ mod tests {
             &metadata,
         );
 
-        assert_ser_tokens(
-            &evt,
-            &[
-                Token::Struct {
-                    name: "Event",
-                    len: 4,
-                },
-                Token::Str("payloadVersion"),
-                Token::U32(PAYLOAD_VERSION),
-                Token::Str("exceptions"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
-                Token::Str("severity"),
-                Token::Some,
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "error",
-                },
-                Token::Str("device"),
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("1.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine"),
-                Token::StructEnd,
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&evt).unwrap(),
+            json!({
+                "exceptions": [],
+                "severity": "error",
+                "device": {
+                    "osVersion": "1.0.0",
+                    "hostname": "testmachine"
+                }
+            })
         );
     }
 
@@ -127,39 +104,17 @@ mod tests {
             &metadata,
         );
 
-        assert_ser_tokens(
-            &evt,
-            &[
-                Token::Struct {
-                    name: "Event",
-                    len: 5,
-                },
-                Token::Str("payloadVersion"),
-                Token::U32(PAYLOAD_VERSION),
-                Token::Str("exceptions"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
-                Token::Str("severity"),
-                Token::Some,
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "error",
-                },
-                Token::Str("context"),
-                Token::Some,
-                Token::Str("test/context"),
-                Token::Str("device"),
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("1.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine"),
-                Token::StructEnd,
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&evt).unwrap(),
+            json!({
+                "exceptions": [],
+                "severity": "error",
+                "context": "test/context",
+                "device": {
+                    "osVersion": "1.0.0",
+                    "hostname": "testmachine"
+                }
+            })
         );
     }
 
@@ -181,52 +136,21 @@ mod tests {
             &metadata,
         );
 
-        assert_ser_tokens(
-            &evt,
-            &[
-                Token::Struct {
-                    name: "Event",
-                    len: 5,
+        assert_eq!(
+            serde_json::to_value(&evt).unwrap(),
+            json!({
+                "exceptions": [],
+                "severity": "error",
+                "device": {
+                    "osVersion": "1.0.0",
+                    "hostname": "testmachine"
                 },
-                Token::Str("payloadVersion"),
-                Token::U32(PAYLOAD_VERSION),
-                Token::Str("exceptions"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
-                Token::Str("severity"),
-                Token::Some,
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "error",
-                },
-                Token::Str("device"),
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("1.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine"),
-                Token::StructEnd,
-                Token::Str("app"),
-                Token::Some,
-                Token::Struct {
-                    name: "AppInfo",
-                    len: 3,
-                },
-                Token::Str("version"),
-                Token::Some,
-                Token::Str("1.0.0"),
-                Token::Str("releaseStage"),
-                Token::Some,
-                Token::Str("test"),
-                Token::Str("type"),
-                Token::Some,
-                Token::Str("rust"),
-                Token::StructEnd,
-                Token::StructEnd,
-            ],
+                "app": {
+                    "version": "1.0.0",
+                    "releaseStage": "test",
+                    "type": "rust"
+                }
+            })
         );
     }
 
@@ -248,52 +172,21 @@ mod tests {
             &metadata,
         );
 
-        assert_ser_tokens(
-            &evt,
-            &[
-                Token::Struct {
-                    name: "Event",
-                    len: 5,
+        assert_eq!(
+            serde_json::to_value(&evt).unwrap(),
+            json!({
+                "exceptions": [],
+                "severity": "error",
+                "device": {
+                    "osVersion": "1.0.0",
+                    "hostname": "testmachine"
                 },
-                Token::Str("payloadVersion"),
-                Token::U32(PAYLOAD_VERSION),
-                Token::Str("exceptions"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
-                Token::Str("severity"),
-                Token::Some,
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "error",
-                },
-                Token::Str("device"),
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("1.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine"),
-                Token::StructEnd,
-                Token::Str("user"),
-                Token::Some,
-                Token::Struct {
-                    name: "User",
-                    len: 3,
-                },
-                Token::Str("id"),
-                Token::Some,
-                Token::Str("123456789"),
-                Token::Str("name"),
-                Token::Some,
-                Token::Str("testuser"),
-                Token::Str("email"),
-                Token::Some,
-                Token::Str("test@user.com"),
-                Token::StructEnd,
-                Token::StructEnd,
-            ],
+                "user": {
+                    "id": "123456789",
+                    "name": "testuser",
+                    "email": "test@user.com"
+                }
+            })
         );
     }
 
@@ -304,29 +197,15 @@ mod tests {
         let app = None;
         let user = None;
 
-        #[derive(Debug, Serialize)]
-        struct TestMetaData {
-            data: NestedTestMetaData,
-            meta: String,
-            test: String,
-        }
-        #[derive(Debug, Serialize)]
-        struct NestedTestMetaData {
-            boolean: bool,
-            float: f64,
-            number: u64,
-        }
-        let test_metadata = TestMetaData {
-            data: NestedTestMetaData {
-                boolean: false,
-                float: 1.0,
-                number: 42,
-            },
-            meta: "test meta data".to_string(),
-            test: "DATA_META_TEST".to_string(),
-        };
-
-        let metadata = Some(serde_json::to_value(test_metadata).unwrap());
+        let metadata = Some(json!({
+            "test": "DATA_META_TEST",
+            "meta": "test meta data",
+            "data": {
+                "boolean": false,
+                "float": 1.0,
+                "number": 42
+            }
+        }));
 
         let evt = Event::new(
             &empty_vec,
@@ -339,53 +218,25 @@ mod tests {
             &metadata,
         );
 
-        assert_ser_tokens(
-            &evt,
-            &[
-                Token::Struct {
-                    name: "Event",
-                    len: 5,
+        assert_eq!(
+            serde_json::to_value(&evt).unwrap(),
+            json!({
+                "exceptions": [],
+                "severity": "error",
+                "device": {
+                    "osVersion": "1.0.0",
+                    "hostname": "testmachine"
                 },
-                Token::Str("payloadVersion"),
-                Token::U32(PAYLOAD_VERSION),
-                Token::Str("exceptions"),
-                Token::Seq { len: Some(0) },
-                Token::SeqEnd,
-                Token::Str("severity"),
-                Token::Some,
-                Token::UnitVariant {
-                    name: "Severity",
-                    variant: "error",
-                },
-                Token::Str("device"),
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("1.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine"),
-                Token::StructEnd,
-                Token::Str("metaData"),
-                Token::Some,
-                Token::Map { len: Some(3) },
-                Token::Str("data"),
-                Token::Map { len: Some(3) },
-                Token::Str("boolean"),
-                Token::Bool(false),
-                Token::Str("float"),
-                Token::F64(1.0),
-                Token::Str("number"),
-                Token::U64(42),
-                Token::MapEnd,
-                Token::Str("meta"),
-                Token::Str("test meta data"),
-                Token::Str("test"),
-                Token::Str("DATA_META_TEST"),
-                Token::MapEnd,
-                Token::StructEnd,
-            ],
+                "metaData": {
+                    "test": "DATA_META_TEST",
+                    "meta": "test meta data",
+                    "data": {
+                        "boolean": false,
+                        "float": 1.0,
+                        "number": 42
+                    }
+                }
+            })
         );
     }
 }

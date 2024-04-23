@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceInfo {
@@ -34,26 +36,20 @@ impl DeviceInfo {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::DeviceInfo;
-    use serde_test::{assert_ser_tokens, Token};
 
     #[test]
     fn test_deviceinfo_to_json() {
         let info = DeviceInfo::new("1.0.0", "testmachine");
 
-        assert_ser_tokens(
-            &info,
-            &[
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("1.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine"),
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&info).unwrap(),
+            json!({
+                "osVersion": "1.0.0",
+                "hostname": "testmachine"
+            })
         );
     }
 
@@ -63,19 +59,12 @@ mod tests {
         info.set_hostname("testmachine3");
         info.set_os_version("3.0.0");
 
-        assert_ser_tokens(
-            &info,
-            &[
-                Token::Struct {
-                    name: "DeviceInfo",
-                    len: 2,
-                },
-                Token::Str("osVersion"),
-                Token::Str("3.0.0"),
-                Token::Str("hostname"),
-                Token::Str("testmachine3"),
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&info).unwrap(),
+            json!({
+                "osVersion": "3.0.0",
+                "hostname": "testmachine3"
+            })
         );
     }
 }

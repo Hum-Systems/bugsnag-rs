@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppInfo {
@@ -23,30 +25,19 @@ impl AppInfo {
 #[cfg(test)]
 mod tests {
     use super::AppInfo;
-    use serde_test::{assert_ser_tokens, Token};
+    use serde_json::json;
 
     #[test]
     fn test_appinfo_to_json() {
         let info = AppInfo::new(Some("1.0.0"), Some("test"), Some("rust"));
 
-        assert_ser_tokens(
-            &info,
-            &[
-                Token::Struct {
-                    name: "AppInfo",
-                    len: 3,
-                },
-                Token::Str("version"),
-                Token::Some,
-                Token::Str("1.0.0"),
-                Token::Str("releaseStage"),
-                Token::Some,
-                Token::Str("test"),
-                Token::Str("type"),
-                Token::Some,
-                Token::Str("rust"),
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&info).unwrap(),
+            json!({
+                "version": "1.0.0",
+                "releaseStage": "test",
+                "type": "rust"
+            })
         );
     }
 
@@ -54,18 +45,11 @@ mod tests {
     fn test_appinfo_with_version_to_json() {
         let info = AppInfo::new(Some("1.0.0"), None, None);
 
-        assert_ser_tokens(
-            &info,
-            &[
-                Token::Struct {
-                    name: "AppInfo",
-                    len: 1,
-                },
-                Token::Str("version"),
-                Token::Some,
-                Token::Str("1.0.0"),
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&info).unwrap(),
+            json!({
+                "version": "1.0.0"
+            })
         );
     }
 
@@ -73,18 +57,11 @@ mod tests {
     fn test_appinfo_with_release_stage_to_json() {
         let info = AppInfo::new(None, Some("test"), None);
 
-        assert_ser_tokens(
-            &info,
-            &[
-                Token::Struct {
-                    name: "AppInfo",
-                    len: 1,
-                },
-                Token::Str("releaseStage"),
-                Token::Some,
-                Token::Str("test"),
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&info).unwrap(),
+            json!({
+                "releaseStage": "test"
+            })
         );
     }
 
@@ -92,18 +69,11 @@ mod tests {
     fn test_appinfo_with_type_to_json() {
         let info = AppInfo::new(None, None, Some("rust"));
 
-        assert_ser_tokens(
-            &info,
-            &[
-                Token::Struct {
-                    name: "AppInfo",
-                    len: 1,
-                },
-                Token::Str("type"),
-                Token::Some,
-                Token::Str("rust"),
-                Token::StructEnd,
-            ],
+        assert_eq!(
+            serde_json::to_value(&info).unwrap(),
+            json!({
+                "type": "rust"
+            })
         );
     }
 }

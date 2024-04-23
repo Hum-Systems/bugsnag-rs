@@ -19,15 +19,6 @@
 //! For more examples on how to integrate bugsnag into a project, the examples
 //! folder provides some reference implementations.
 
-extern crate backtrace;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
-#[cfg(test)]
-extern crate serde_test;
-extern crate sys_info;
-
 mod bugsnag_impl;
 mod event;
 mod exception;
