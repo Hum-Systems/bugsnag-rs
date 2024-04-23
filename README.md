@@ -17,8 +17,7 @@ bugsnag.set_app_info(
        Some("rust"),
 );
 
-bugsnag
-       .notify("Error", "this is a message from bugsnag-rs"))
+bugsnag.notify("Error", "this is a message from bugsnag-rs"))
        .severity(Severity::Error)
        .send()
        .unwrap();
