@@ -6,7 +6,7 @@ The Bugsnag api in rust.
 # Example
 
 ```rust
-use bugsnag;
+use bugsnag::{Bugsnag, Severity};
 
 let mut bugsnag = Bugsnag::new("api-key", env!("CARGO_MANIFEST_DIR"));
 
@@ -17,7 +17,7 @@ bugsnag.set_app_info(
        Some("rust"),
 );
 
-bugsnag.notify("Error", "this is a message from bugsnag-rs"))
+bugsnag.notify("Error", "this is a message from bugsnag-rs")
        .severity(Severity::Error)
        .send()
        .unwrap();
