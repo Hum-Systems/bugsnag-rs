@@ -17,6 +17,7 @@ fn init_bugsnag() {
     panic::set_hook(Box::new(move |info| {
         let message = bugsnag::panic::to_message(info);
 
+        let mut bugsnag = bugsnag.clone();
         let res = bugsnag
             .notify("Panic", &message)
             .severity(Severity::Error)

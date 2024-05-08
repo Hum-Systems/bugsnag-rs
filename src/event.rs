@@ -25,6 +25,7 @@ pub struct Event<'a> {
 }
 
 impl<'a> Event<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         exceptions: &'a [Exception],
         severity: Option<&'a Severity>,
