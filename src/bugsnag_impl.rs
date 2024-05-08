@@ -144,15 +144,23 @@ impl RateLimit {
     }
 
     fn read_from_file(&mut self) -> Self {
-        if let Ok(json) = std::fs::read_to_string(&self.persistence_file) {
-            serde_json::from_str::<RateLimit>(&json).expect("failed to deserialize RateLimit")
-        } else {
+        let Ok(json) = std::fs::read_to_string(&self.persistence_file) else {
             info!(
                 "failed to read RateLimit from {}, creating new RateLimit",
                 self.persistence_file.display()
             );
-            self.clone()
-        }
+            return self.clone();
+        };
+
+        let Ok(rl) = serde_json::from_str::<RateLimit>(&json) else {
+            info!(
+                "failed to deserialize RateLimit from {}, creating new RateLimit",
+                self.persistence_file.display()
+            );
+            return self.clone();
+        };
+
+        rl
     }
 
     fn write_to_file(&self) {
