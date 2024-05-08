@@ -48,10 +48,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@master
-        with:
-          lfs: true
-          submodules: recursive
-          token: ${{ secrets.SERVICE_ACCOUNT_TOKEN }}
       - name: install rust
         uses: actions-rs/toolchain@v1
         with:

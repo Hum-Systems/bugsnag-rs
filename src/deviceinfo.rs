@@ -26,11 +26,11 @@ impl DeviceInfo {
     }
 
     pub fn set_os_version(&mut self, version: &str) {
-        self.os_version = version.to_owned();
+        version.clone_into(&mut self.os_version)
     }
 
     pub fn set_hostname(&mut self, name: &str) {
-        self.hostname = name.to_owned();
+        name.clone_into(&mut self.hostname)
     }
 }
 

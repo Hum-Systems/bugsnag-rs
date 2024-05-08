@@ -261,7 +261,6 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
         self
     }
 
-    ///
     pub fn metadata(mut self, val: &impl Serialize) -> Result<Self, Error> {
         let json_val = match serde_json::to_value(val) {
             Ok(v) => v,
@@ -320,12 +319,12 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
             self.error_class = "RateLimit";
             self.message = "Rate limit reached. Notifications will be suppressed.";
             self.context = None;
-            self.metadata = options.metadata.clone();
-            self.severity = options.severity.clone();
+            self.metadata.clone_from(&options.metadata);
+            self.severity.clone_from(&options.severity);
             self.grouping_hash = Some("rate_limit");
         }
 
-        if rate_limit_reached && !rate_limit_triggered.is_some() {
+        if rate_limit_reached && rate_limit_triggered.is_none() {
             info!("Rate limit reached. Notifications will be suppressed.");
             return Ok(());
         }
