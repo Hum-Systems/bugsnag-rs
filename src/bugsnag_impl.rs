@@ -4,7 +4,7 @@ use serde_json::json;
 
 use super::{appinfo, deviceinfo, event, exception, notification, stacktrace, user};
 
-use log::info;
+use log::{info, warn};
 use std::error::Error as StdError;
 use std::fmt;
 use std::fs::DirEntry;
@@ -107,6 +107,19 @@ impl RateLimit {
             triggered: false,
             notification_options,
         };
+
+        // if the persistence file does not exist, create it
+
+        if !res.persistence_file.exists() {
+            std::fs::create_dir_all(res.persistence_file.parent().unwrap()).unwrap();
+            let content = serde_json::to_string(&res).expect("failed to serialize RateLimit");
+            std::fs::write(&res.persistence_file, content).unwrap_or_else(|_| {
+                warn!(
+                    "failed to write RateLimit to {}",
+                    res.persistence_file.display()
+                )
+            });
+        }
 
         let from_file = res.read_from_file();
 
@@ -372,7 +385,7 @@ impl<'a, 'bugsnag> NotifyBuilder<'a, 'bugsnag> {
     }
 }
 
-impl<'a, 'bugsnag> Drop for NotifyBuilder<'a, 'bugsnag> {
+impl Drop for NotifyBuilder<'_, '_> {
     fn drop(&mut self) {
         let _ = self.send();
     }

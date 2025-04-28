@@ -1,6 +1,6 @@
-use std::panic::PanicInfo;
+use std::panic::PanicHookInfo;
 
-pub fn to_message(info: &PanicInfo) -> String {
+pub fn to_message(info: &PanicHookInfo) -> String {
     if let Some(data) = info.payload().downcast_ref::<String>() {
         data.to_owned()
     } else if let Some(data) = info.payload().downcast_ref::<&str>() {
